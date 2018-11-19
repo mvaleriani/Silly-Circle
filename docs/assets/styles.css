@@ -6,4 +6,12 @@ body{
     width: 100vw;
     height: 100vh;
     background: lightblue;
+    overflow: hidden;
+
+    display: flex;
+    justify-content: center;
+}
+
+.spotlight{
+    background: radial-gradient(circle, rgba(255,251,137,1) 0%, rgba(255,255,255,0) 40%);
 }
