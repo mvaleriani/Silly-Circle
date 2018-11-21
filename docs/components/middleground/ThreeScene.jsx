@@ -24,16 +24,22 @@ class ThreeScene extends React.Component{
         const height = this.mount.clientHeight
 
         // let canvas = document.getElementsByTagName("canvas")[0]
-        debugger;
+        
         //ADD SCENE
         this.scene = new THREE.Scene()
         //ADD CAMERA
         this.camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 1, 10000);
         this.camera.position.z = 1800;
 
-        this.light = new THREE.DirectionalLight(0xffffff);
+        this.light = new THREE.DirectionalLight(0xffffff, 1, 100 );
         this.light.position.set(0, 0, 1);
+        this.light.castShadow = true;   
         this.scene.add(this.light);
+
+        this.light.shadow.mapSize.width = 512;  // default
+        this.light.shadow.mapSize.height = 512; // default
+        this.light.shadow.camera.near = 0.5;    // default
+        this.light.shadow.camera.far = 500;   
 
         // let canvas = this.renderer.domElement;
         // console.log(canvas);
@@ -73,13 +79,18 @@ class ThreeScene extends React.Component{
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setSize(width, height);
 
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
         this.mount.appendChild(this.renderer.domElement)
 
         //ADD GEOMETRY
-        var radius = 200;
-        var geometry1 = new THREE.IcosahedronBufferGeometry(radius, 1);
+        var radius = 150;
+        var geometry1 = new THREE.BufferGeometry().fromGeometry(new THREE.CylinderGeometry(radius, radius, 8, 32));
+
+
         var count = geometry1.attributes.position.count;
-        geometry1.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+        geometry1.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count*3), 3));
         var color = new THREE.Color();
         var positions1 = geometry1.attributes.position;
         var colors1 = geometry1.attributes.color;
@@ -93,15 +104,26 @@ class ThreeScene extends React.Component{
             color: 0xffffff,
             flatShading: true,
             vertexColors: THREE.VertexColors,
-            shininess: 0
+            shininess: 5
         });
+        // material.wireframeLinewidth = 0;
         var wireframeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, wireframe: true, transparent: true });
+        wireframeMaterial.wireframeLinewidth = 3;
         var mesh = new THREE.Mesh(geometry1, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = false;
+        var planeGeometry = new THREE.PlaneBufferGeometry(20, 20, 32, 32);
+        var planeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+        var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.receiveShadow = true;
+        this.scene.add(plane);
+
         var wireframe = new THREE.Mesh(geometry1, wireframeMaterial);
         mesh.add(wireframe);
         mesh.position.x = 0;
         mesh.rotation.x = - 1.87;
         this.scene.add(mesh);
+        
 
         // const geometry = new THREE.BoxGeometry(1, 1, 1)
         // const material = new THREE.MeshBasicMaterial({ color: '#433F81' })
@@ -142,13 +164,6 @@ class ThreeScene extends React.Component{
     }
 
     animate () {
-        // this.cube.rotation.x += 0.01
-        // this.cube.rotation.y += 0.01
-        
-
-        // console.log(this.camera.position);
-        
-
         this.renderScene()
         this.frameId = window.requestAnimationFrame(this.animate)
     }
@@ -164,7 +179,7 @@ class ThreeScene extends React.Component{
     render() {
         return (
             <div 
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', zIndex: 1 }}
                 ref={(mount) => { this.mount = mount }}
             />
         )
